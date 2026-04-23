@@ -1,0 +1,31 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcworkspace/xcuserdata
+*.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+
+# XcodeGen (regenerated from project.yml — do not commit)
+*.xcodeproj/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Packages/
+Package.resolved
+
+# macOS
+.DS_Store
+
+# CocoaPods (unused here)
+Pods/
+
+# IDE / editor
+.idea/
+.vscode/
+
+# Export artifacts
+ExportOptions.plist
+*.ipa
+*.xcarchive
