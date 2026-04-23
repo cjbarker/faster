@@ -1,0 +1,116 @@
+{
+  "cards": [
+    {
+      "id": "anabolic.just-ate",
+      "phase": "anabolic",
+      "title": "You just ate — digestion mode",
+      "body": "Insulin is elevated and your body is absorbing nutrients. Keep sipping water. Avoid snacking to let insulin settle.",
+      "hourMin": 0,
+      "hourMax": 2,
+      "tags": ["hydration"],
+      "ctaType": "log_water"
+    },
+    {
+      "id": "anabolic.winding-down",
+      "phase": "anabolic",
+      "title": "Digestion winding down",
+      "body": "Stick to water or unsweetened tea. A short 10–15 minute walk can help glucose levels settle.",
+      "hourMin": 2,
+      "hourMax": 4,
+      "tags": ["hydration", "movement"],
+      "ctaType": "log_water"
+    },
+    {
+      "id": "earlyfast.hydrate",
+      "phase": "earlyFast",
+      "title": "Early fast — keep sipping",
+      "body": "Insulin is falling. Plain water, sparkling water, black coffee, or plain tea are all fine and won't break your fast.",
+      "hourMin": 4,
+      "hourMax": 8,
+      "tags": ["hydration", "allowed"],
+      "ctaType": "log_water"
+    },
+    {
+      "id": "earlyfast.coffee-caution",
+      "phase": "earlyFast",
+      "title": "Coffee? Keep it black",
+      "body": "Caffeine is okay. Cream, milk, sugar, and sweeteners with calories will break your fast. A pinch of cinnamon is fine.",
+      "hourMin": 8,
+      "hourMax": 12,
+      "tags": ["allowed", "avoid"],
+      "ctaType": null
+    },
+    {
+      "id": "glycogen.electrolytes",
+      "phase": "glycogenDepletion",
+      "title": "Consider electrolytes",
+      "body": "You're dipping into glycogen stores and flushing water. A pinch of salt in water, or an electrolyte drink without sugar, can prevent headaches and fatigue.",
+      "hourMin": 12,
+      "hourMax": 14,
+      "tags": ["electrolytes", "hydration"],
+      "ctaType": "log_water"
+    },
+    {
+      "id": "glycogen.hunger-wave",
+      "phase": "glycogenDepletion",
+      "title": "Hunger comes in waves",
+      "body": "Hunger typically peaks and passes. Drink water, take a short walk, or change activity. If you feel dizzy or unwell, end your fast gently.",
+      "hourMin": 14,
+      "hourMax": 16,
+      "tags": ["mindset"],
+      "ctaType": null
+    },
+    {
+      "id": "fatburn.entering-ketosis",
+      "phase": "fatBurning",
+      "title": "Entering fat-burning",
+      "body": "Your body is now primarily burning fat. Keep hydrating. Light activity is great; avoid intense workouts unless you're adapted.",
+      "hourMin": 16,
+      "hourMax": 18,
+      "tags": ["allowed"],
+      "ctaType": null
+    },
+    {
+      "id": "fatburn.break-gently",
+      "phase": "fatBurning",
+      "title": "Plan a gentle break-fast",
+      "body": "Start small: bone broth, a handful of nuts, plain yogurt, or a piece of fruit. Avoid refined carbs, big portions, and sugary drinks on an empty stomach.",
+      "hourMin": 18,
+      "hourMax": 24,
+      "tags": ["break-fast"],
+      "ctaType": "end_fast"
+    },
+    {
+      "id": "deep.autophagy",
+      "phase": "deepKetosis",
+      "title": "Deep ketosis and autophagy",
+      "body": "Extended fasts carry more risk. Listen to your body — dizziness, heart palpitations, or extreme fatigue mean end the fast now.",
+      "hourMin": 24,
+      "hourMax": 48,
+      "tags": ["safety"],
+      "ctaType": "end_fast"
+    }
+  ],
+
+  "allowed": [
+    { "id": "water",            "name": "Water",                        "verdict": "allowed",    "notes": "Plain, sparkling, or mineral water. The ideal fasting beverage.",                                 "category": "water" },
+    { "id": "black-coffee",     "name": "Black coffee",                 "verdict": "allowed",    "notes": "No sugar, no milk, no cream. A small amount of cinnamon is fine.",                              "category": "caffeine" },
+    { "id": "plain-tea",        "name": "Plain tea (black/green/herbal)", "verdict": "allowed",  "notes": "Unsweetened. Herbal teas without added calories are great.",                                    "category": "caffeine" },
+    { "id": "electrolytes-zero","name": "Zero-calorie electrolytes",    "verdict": "allowed",    "notes": "Pinch of sea salt in water, or sugar-free electrolyte mixes. Especially helpful after 12h.",    "category": "electrolytes" },
+    { "id": "apple-cider-vinegar","name": "Apple cider vinegar (splash)", "verdict": "allowed",  "notes": "A small splash in water. Can blunt hunger. Rinse your mouth afterward to protect enamel.",      "category": "zero-calorie" },
+    { "id": "lemon-slice",      "name": "A slice of lemon or lime",     "verdict": "allowed",    "notes": "The few calories from a slice are negligible. Whole juice is not allowed.",                    "category": "zero-calorie" },
+
+    { "id": "diet-soda",        "name": "Diet soda / artificial sweeteners", "verdict": "cautious", "notes": "Unlikely to break a fat-loss fast, but can trigger cravings and an insulin response in some people.", "category": "zero-calorie" },
+    { "id": "gum-sugar-free",   "name": "Sugar-free gum",               "verdict": "cautious",   "notes": "Small sugar alcohol load. Probably fine, but skip it if your goal is strict autophagy.",         "category": "zero-calorie" },
+    { "id": "bone-broth",       "name": "Bone broth",                   "verdict": "cautious",   "notes": "Has ~30–50 calories and protein. Technically breaks a strict fast but can be useful on longer fasts.", "category": "broth" },
+    { "id": "bcaa",             "name": "BCAAs / amino acid drinks",    "verdict": "cautious",   "notes": "Small protein load that spikes insulin. Avoid if you want autophagy; okay for gym fasts.",     "category": "supplement" },
+
+    { "id": "milk",             "name": "Milk or cream in coffee",      "verdict": "breaksFast", "notes": "Even a splash contains lactose and fat — breaks the fast.",                                     "category": "dairy" },
+    { "id": "juice",            "name": "Fruit juice",                  "verdict": "breaksFast", "notes": "High in sugar; spikes insulin quickly.",                                                        "category": "sugar" },
+    { "id": "soda",             "name": "Regular soda / sugary drinks", "verdict": "breaksFast", "notes": "Will break the fast immediately.",                                                              "category": "sugar" },
+    { "id": "protein-shake",    "name": "Protein shake",                "verdict": "breaksFast", "notes": "Protein raises insulin and stops the fasted state.",                                            "category": "protein" },
+    { "id": "any-solid",        "name": "Any solid food",               "verdict": "breaksFast", "notes": "If in doubt, solid food ends the fast.",                                                          "category": "solid" },
+    { "id": "alcohol",          "name": "Alcohol",                      "verdict": "breaksFast", "notes": "Adds calories and stresses the liver during a fast.",                                           "category": "alcohol" },
+    { "id": "gummy-vitamins",   "name": "Gummy or sweetened vitamins",  "verdict": "breaksFast", "notes": "Added sugars break the fast. Plain capsule vitamins with water are fine.",                       "category": "supplement" }
+  ]
+}
