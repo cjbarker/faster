@@ -3,7 +3,7 @@ import SwiftData
 
 enum ModelContainerFactory {
     static func make(inMemory: Bool = false) -> ModelContainer {
-        let schema = Schema(versionedSchema: SchemaV1.self)
+        let schema = Schema(versionedSchema: SchemaV2.self)
         let config = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: inMemory,
@@ -22,6 +22,9 @@ enum ModelContainerFactory {
 }
 
 enum FasterMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [SchemaV1.self] }
-    static var stages: [MigrationStage] { [] }
+    static var schemas: [any VersionedSchema.Type] { [SchemaV1.self, SchemaV2.self] }
+    static var stages: [MigrationStage] {
+        // Lightweight migration drops the empty NotificationLog table.
+        [.lightweight(fromVersion: SchemaV1.self, toVersion: SchemaV2.self)]
+    }
 }

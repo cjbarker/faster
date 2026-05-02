@@ -84,6 +84,16 @@ struct SettingsView: View {
                             Label("Protocol", systemImage: "timer")
                         }
 
+                        DatePicker(
+                            selection: Binding(
+                                get: { minutesToDate(plan.eatingWindowStartMinutes) },
+                                set: { plan.eatingWindowStartMinutes = dateToMinutes($0); try? context.save() }
+                            ),
+                            displayedComponents: .hourAndMinute
+                        ) {
+                            Label("Eating window opens", systemImage: "clock")
+                        }
+
                         Toggle(isOn: Binding(
                             get: { plan.hydrationNudgesEnabled },
                             set: { plan.hydrationNudgesEnabled = $0; try? context.save() }
@@ -167,6 +177,16 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private func minutesToDate(_ minutes: Int) -> Date {
+        var c = DateComponents(); c.hour = minutes / 60; c.minute = minutes % 60
+        return Calendar.current.date(from: c) ?? Date()
+    }
+
+    private func dateToMinutes(_ date: Date) -> Int {
+        let c = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return (c.hour ?? 0) * 60 + (c.minute ?? 0)
     }
 
     private enum ExportKind { case json, csv }

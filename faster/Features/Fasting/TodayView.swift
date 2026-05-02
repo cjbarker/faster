@@ -379,6 +379,7 @@ private struct MoodEnergySheet: View {
     @Environment(\.modelContext) private var context
     @State private var mood: Int = 3
     @State private var energy: Int = 3
+    @State private var notes: String = ""
 
     var body: some View {
         NavigationStack {
@@ -399,8 +400,19 @@ private struct MoodEnergySheet: View {
                     .padding(.top, Spacing.lg)
 
                     VStack(spacing: Spacing.md) {
-                        RatingRow(label: "Mood", icon: "face.smiling", value: $mood, tint: AppColor.accent)
-                        RatingRow(label: "Energy", icon: "bolt.fill", value: $energy, tint: .orange)
+                        RatingRow(label: "Mood",   icon: "face.smiling", value: $mood,   tint: AppColor.accent)
+                        RatingRow(label: "Energy", icon: "bolt.fill",    value: $energy, tint: .orange)
+
+                        // Session notes
+                        VStack(alignment: .leading, spacing: Spacing.xs) {
+                            Label("Notes", systemImage: "note.text")
+                                .font(AppFont.headline)
+                                .symbolRenderingMode(.hierarchical)
+                            TextField("How did this fast go? (optional)", text: $notes, axis: .vertical)
+                                .lineLimit(3...6)
+                                .font(AppFont.callout)
+                        }
+                        .cardStyle()
                     }
                     .padding(.horizontal)
 
@@ -421,11 +433,17 @@ private struct MoodEnergySheet: View {
             }
             .navigationBarTitleDisplayMode(.inline)
         }
+        .onAppear {
+            mood   = session.moodAtBreakFast   ?? 3
+            energy = session.energyAtBreakFast ?? 3
+            notes  = session.notes
+        }
     }
 
     private func save() {
-        session.moodAtBreakFast = mood
+        session.moodAtBreakFast   = mood
         session.energyAtBreakFast = energy
+        session.notes             = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         try? context.save()
     }
 }

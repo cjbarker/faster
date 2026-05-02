@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Charts
 
 struct WaterLogView: View {
     @Environment(\.modelContext) private var context
@@ -34,6 +35,10 @@ struct WaterLogView: View {
 
                     // Quick-add buttons
                     QuickAddRow { ml in addWater(ml) }
+                        .padding(.horizontal)
+
+                    // 7-day trend chart
+                    WaterTrendChart(entries: entries, targetMl: targetMl, formatFn: { format($0) })
                         .padding(.horizontal)
 
                     // Today's log
@@ -203,6 +208,84 @@ private struct TodayWaterLog: View {
                     }
                 }
             }
+        }
+    }
+}
+
+// MARK: - 7-Day Trend Chart
+
+private struct WaterTrendChart: View {
+    var entries: [WaterEntry]
+    var targetMl: Double
+    var formatFn: (Double) -> String
+
+    private struct DayTotal: Identifiable {
+        let id = UUID()
+        let date: Date
+        let totalMl: Double
+    }
+
+    private var weekData: [DayTotal] {
+        let cal = Calendar.current
+        return (0..<7).reversed().compactMap { offset -> DayTotal? in
+            guard let day = cal.date(byAdding: .day, value: -offset, to: cal.startOfDay(for: Date())) else { return nil }
+            let next = cal.date(byAdding: .day, value: 1, to: day) ?? day
+            let total = entries
+                .filter { $0.date >= day && $0.date < next }
+                .reduce(0) { $0 + $1.volumeMl }
+            return DayTotal(date: day, totalMl: total)
+        }
+    }
+
+    private var hasAnyData: Bool { weekData.contains { $0.totalMl > 0 } }
+
+    var body: some View {
+        if hasAnyData {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                Label("7-Day Hydration", systemImage: "chart.bar.fill")
+                    .font(AppFont.headline)
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(AppColor.eatingRing)
+
+                Chart {
+                    ForEach(weekData) { day in
+                        BarMark(
+                            x: .value("Day", day.date, unit: .day),
+                            y: .value("Water", day.totalMl)
+                        )
+                        .foregroundStyle(
+                            day.totalMl >= targetMl
+                                ? AppColor.eatingRing
+                                : AppColor.eatingRing.opacity(0.45)
+                        )
+                        .cornerRadius(5)
+                    }
+                    RuleMark(y: .value("Target", targetMl))
+                        .foregroundStyle(AppColor.eatingRing)
+                        .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [5, 3]))
+                        .annotation(position: .top, alignment: .trailing) {
+                            Text("Goal \(formatFn(targetMl))")
+                                .font(AppFont.caption2)
+                                .foregroundStyle(AppColor.eatingRing)
+                        }
+                }
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day)) {
+                        AxisValueLabel(format: .dateTime.weekday(.abbreviated))
+                            .foregroundStyle(Color.secondary)
+                        AxisGridLine().foregroundStyle(Color.secondary.opacity(0.15))
+                    }
+                }
+                .chartYAxis {
+                    AxisMarks(values: .automatic(desiredCount: 3)) {
+                        AxisValueLabel()
+                            .foregroundStyle(Color.secondary)
+                        AxisGridLine().foregroundStyle(Color.secondary.opacity(0.15))
+                    }
+                }
+                .frame(height: 150)
+            }
+            .cardStyle()
         }
     }
 }

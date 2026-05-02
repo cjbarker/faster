@@ -30,7 +30,7 @@ struct WeeklySummaryView: View {
 
                     MoodEnergyTrendChart(sessions: sessions)
 
-                    RecentFastsList(sessions: Array(sessions.prefix(10)))
+                    RecentFastsList(sessions: Array(sessions.prefix(5)), allSessions: sessions)
                 }
                 .padding(.horizontal)
                 .padding(.vertical, Spacing.md)
@@ -154,13 +154,27 @@ private struct StatCard: View {
 // MARK: - Recent Fasts
 
 private struct RecentFastsList: View {
-    var sessions: [FastSession]
+    var sessions: [FastSession]       // already trimmed to 5
+    var allSessions: [FastSession]    // full list for navigation
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Recent Fasts")
-                .font(AppFont.title3)
-                .padding(.top, Spacing.xs)
+            HStack {
+                Text("Recent Fasts")
+                    .font(AppFont.title3)
+                    .padding(.top, Spacing.xs)
+                Spacer()
+                if allSessions.count > 5 {
+                    NavigationLink {
+                        FastingHistoryView()
+                    } label: {
+                        Text("View all")
+                            .font(AppFont.callout)
+                            .foregroundStyle(AppColor.accent)
+                    }
+                    .padding(.top, Spacing.xs)
+                }
+            }
 
             if sessions.isEmpty {
                 HStack {
@@ -224,6 +238,12 @@ private struct RecentFastRow: View {
                         .padding(.vertical, 2)
                         .background(reason.badgeColor.opacity(0.10),
                                     in: Capsule())
+                }
+                if !session.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(session.notes)
+                        .font(AppFont.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
             }
 
