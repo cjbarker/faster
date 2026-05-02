@@ -21,22 +21,6 @@ final class HealthStore {
         )
     }
 
-    func latestWeight() async -> Double? {
-        guard let store,
-              let type = HKObjectType.quantityType(forIdentifier: .bodyMass) else { return nil }
-        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
-        return await withCheckedContinuation { continuation in
-            let query = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
-                guard let sample = samples?.first as? HKQuantitySample else {
-                    continuation.resume(returning: nil); return
-                }
-                let kg = sample.quantity.doubleValue(for: .gramUnit(with: .kilo))
-                continuation.resume(returning: kg)
-            }
-            store.execute(query)
-        }
-    }
-
     func weightHistory(days: Int = 90) async -> [(Date, Double)] {
         guard let store,
               let type = HKObjectType.quantityType(forIdentifier: .bodyMass) else { return [] }
@@ -90,7 +74,6 @@ final class HealthStore {
 final class HealthStore {
     var isAvailable: Bool { false }
     func requestAuthorization() async throws {}
-    func latestWeight() async -> Double? { nil }
     func weightHistory(days: Int = 90) async -> [(Date, Double)] { [] }
     func saveWeight(kg: Double, at date: Date = Date()) async throws {}
     func saveWater(ml: Double, at date: Date = Date()) async throws {}
