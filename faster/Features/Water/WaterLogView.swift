@@ -37,13 +37,18 @@ struct WaterLogView: View {
                         .padding(.horizontal)
 
                     // Today's log
-                    TodayWaterLog(entries: todayEntries) { format($0) }
+                    TodayWaterLog(entries: todayEntries, formatFn: { format($0) }, onDelete: deleteEntry)
                         .padding(.horizontal)
                 }
                 .padding(.bottom, Spacing.xl)
             }
             .navigationTitle("Water")
         }
+    }
+
+    private func deleteEntry(_ entry: WaterEntry) {
+        context.delete(entry)
+        try? context.save()
     }
 
     private func addWater(_ ml: Double) {
@@ -143,6 +148,7 @@ private struct QuickAddRow: View {
 private struct TodayWaterLog: View {
     var entries: [WaterEntry]
     var formatFn: (Double) -> String
+    var onDelete: (WaterEntry) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -187,6 +193,13 @@ private struct TodayWaterLog: View {
                         .padding(.horizontal, Spacing.md)
                         .background(AppColor.secondaryBackground,
                                     in: RoundedRectangle(cornerRadius: CR.sm, style: .continuous))
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                onDelete(entry)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
                 }
             }
