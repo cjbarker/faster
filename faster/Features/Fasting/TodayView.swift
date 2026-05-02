@@ -12,6 +12,7 @@ struct TodayView: View {
     @State private var showEndConfirm = false
     @State private var showAdjustSheet = false
     @State private var moodTarget: FastSession?
+    @State private var fastingError: FastingError?
 
     private var activeSession: FastSession? { sessions.first { $0.isActive } }
     private var plan: FastingPlan? { plans.first }
@@ -64,6 +65,14 @@ struct TodayView: View {
             .sheet(item: $moodTarget) { session in
                 MoodEnergySheet(session: session)
             }
+            .alert(
+                "Can't Start Fast",
+                isPresented: Binding(get: { fastingError != nil }, set: { if !$0 { fastingError = nil } })
+            ) {
+                Button("OK", role: .cancel) { fastingError = nil }
+            } message: {
+                Text(fastingError?.errorDescription ?? "")
+            }
         }
     }
 
@@ -107,7 +116,11 @@ struct TodayView: View {
     private func start() {
         guard let plan else { return }
         let controller = FastingController(context: context, scheduler: deps.notificationScheduler, healthStore: deps.healthStore)
-        _ = try? controller.startFast(plan: plan)
+        do {
+            _ = try controller.startFast(plan: plan)
+        } catch let error as FastingError {
+            fastingError = error
+        } catch {}
     }
 
     private func endFast(reason: FastEndReason) {
