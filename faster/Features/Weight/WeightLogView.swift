@@ -32,6 +32,7 @@ struct WeightLogView: View {
                 .padding(.vertical, Spacing.md)
             }
             .navigationTitle("Weight")
+            .task { await pullFromHealth() }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -40,11 +41,6 @@ struct WeightLogView: View {
                         Image(systemName: "plus.circle.fill")
                             .symbolRenderingMode(.hierarchical)
                             .foregroundStyle(AppColor.accent)
-                    }
-                }
-                ToolbarItem(placement: .secondaryAction) {
-                    Button("Sync Health") {
-                        Task { await pullFromHealth() }
                     }
                 }
             }
@@ -73,11 +69,23 @@ struct WeightLogView: View {
 
     private func pullFromHealth() async {
         let history = await deps.healthStore.weightHistory()
+        guard !history.isEmpty else { return }
+
+        // Build a set of already-stored HealthKit timestamps (rounded to the
+        // nearest second) so re-running the sync never creates duplicates.
+        let existing = Set(
+            entries
+                .filter { $0.source == .healthKit }
+                .map { $0.date.timeIntervalSinceReferenceDate.rounded() }
+        )
+
+        var changed = false
         for (date, kg) in history {
-            let entry = WeightEntry(date: date, weightKg: kg, source: .healthKit)
-            context.insert(entry)
+            guard !existing.contains(date.timeIntervalSinceReferenceDate.rounded()) else { continue }
+            context.insert(WeightEntry(date: date, weightKg: kg, source: .healthKit))
+            changed = true
         }
-        try? context.save()
+        if changed { try? context.save() }
     }
 }
 
