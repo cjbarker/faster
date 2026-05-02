@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(ActivityKit)
+import ActivityKit
+#endif
 
 struct FastingTimerView: View {
     var session: FastSession
@@ -69,6 +72,9 @@ struct FastingTimerView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .onReceive(tick) { now = $0 }
+        .onChange(of: phase) { _, newPhase in
+            Task { await pushLiveActivityUpdate(to: newPhase) }
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(phase.title) — \(Int(progress * 100)) percent complete")
     }
@@ -78,5 +84,19 @@ struct FastingTimerView: View {
         let m = (Int(seconds) % 3600) / 60
         let s = Int(seconds) % 60
         return String(format: "%02d:%02d:%02d", h, m, s)
+    }
+
+    private func pushLiveActivityUpdate(to phase: FastingPhase) async {
+        #if canImport(ActivityKit)
+        let state = FastingActivityAttributes.ContentState(
+            start: session.actualStart,
+            end:   session.plannedEnd,
+            phaseTitle: phase.title
+        )
+        let content = ActivityContent(state: state, staleDate: session.plannedEnd)
+        for activity in Activity<FastingActivityAttributes>.activities {
+            await activity.update(content)
+        }
+        #endif
     }
 }
