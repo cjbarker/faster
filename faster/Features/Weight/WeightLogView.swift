@@ -19,41 +19,33 @@ struct WeightLogView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section("Trend") {
-                    let trend = WeightProjection.movingAverage(points)
-                    let projection = WeightProjection.projection(
-                        latest: trend.last,
-                        target: goal?.targetWeightKg ?? 0,
-                        goalDate: goal?.targetDate
-                    )
-                    WeightChartView(points: points, trend: trend, projection: projection)
+            ScrollView {
+                VStack(spacing: Spacing.md) {
+                    // Chart card
+                    ChartCard(points: points, goal: goal)
+                        .padding(.horizontal)
+
+                    // Entries list
+                    EntriesSection(entries: entries, format: format, onDelete: delete)
+                        .padding(.horizontal)
                 }
-                Section("Entries") {
-                    if entries.isEmpty {
-                        Text("No entries yet.").foregroundStyle(.secondary)
-                    }
-                    ForEach(entries) { entry in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(entry.date, style: .date)
-                                Text(entry.source == .healthKit ? "Apple Health" : "Manual")
-                                    .font(AppFont.caption).foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Text(format(entry.weightKg))
-                        }
-                    }
-                    .onDelete(perform: delete)
-                }
+                .padding(.vertical, Spacing.md)
             }
             .navigationTitle("Weight")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button { showLogSheet = true } label: { Image(systemName: "plus") }
+                    Button {
+                        showLogSheet = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(AppColor.accent)
+                    }
                 }
                 ToolbarItem(placement: .secondaryAction) {
-                    Button("Sync with Health") { Task { await pullFromHealth() } }
+                    Button("Sync Health") {
+                        Task { await pullFromHealth() }
+                    }
                 }
             }
             .sheet(isPresented: $showLogSheet) {
@@ -89,6 +81,115 @@ struct WeightLogView: View {
     }
 }
 
+// MARK: - Chart Card
+
+private struct ChartCard: View {
+    var points: [WeightPoint]
+    var goal: Goal?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Label("Trend", systemImage: "chart.line.uptrend.xyaxis")
+                .font(AppFont.headline)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(AppColor.accentGradient)
+
+            let trend = WeightProjection.movingAverage(points)
+            let projection = WeightProjection.projection(
+                latest: trend.last,
+                target: goal?.targetWeightKg ?? 0,
+                goalDate: goal?.targetDate
+            )
+
+            if points.isEmpty {
+                HStack {
+                    Spacer()
+                    VStack(spacing: Spacing.sm) {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: 28))
+                            .foregroundStyle(.tertiary)
+                        Text("Log your first weight to see a trend.")
+                            .font(AppFont.callout)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, Spacing.xl)
+                    Spacer()
+                }
+            } else {
+                WeightChartView(points: points, trend: trend, projection: projection)
+            }
+        }
+        .cardStyle()
+    }
+}
+
+// MARK: - Entries Section
+
+private struct EntriesSection: View {
+    var entries: [WeightEntry]
+    var format: (Double) -> String
+    var onDelete: (IndexSet) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Entries")
+                .font(AppFont.title3)
+
+            if entries.isEmpty {
+                HStack {
+                    Spacer()
+                    Text("No entries yet.")
+                        .font(AppFont.callout)
+                        .foregroundStyle(.secondary)
+                        .padding(.vertical, Spacing.lg)
+                    Spacer()
+                }
+            } else {
+                VStack(spacing: Spacing.xs) {
+                    ForEach(entries) { entry in
+                        WeightEntryRow(entry: entry, formatted: format(entry.weightKg))
+                    }
+                    .onDelete(perform: onDelete)
+                }
+            }
+        }
+    }
+}
+
+private struct WeightEntryRow: View {
+    var entry: WeightEntry
+    var formatted: String
+
+    var body: some View {
+        HStack(spacing: Spacing.md) {
+            Image(systemName: entry.source == .healthKit ? "heart.fill" : "pencil.circle.fill")
+                .font(.system(size: 16))
+                .foregroundStyle(entry.source == .healthKit ? Color.red : AppColor.accent)
+                .symbolRenderingMode(.hierarchical)
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(entry.date, style: .date)
+                    .font(AppFont.callout)
+                Text(entry.source == .healthKit ? "Apple Health" : "Manual")
+                    .font(AppFont.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Text(formatted)
+                .font(AppFont.headline)
+        }
+        .padding(.vertical, Spacing.xs)
+        .padding(.horizontal, Spacing.md)
+        .background(AppColor.secondaryBackground,
+                    in: RoundedRectangle(cornerRadius: CR.sm, style: .continuous))
+    }
+}
+
+// MARK: - Log Weight Sheet
+
 private struct LogWeightSheet: View {
     var unit: UnitSystem
     var onSave: (Double) -> Void
@@ -98,12 +199,21 @@ private struct LogWeightSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                WeightField(label: "Weight", kg: $kg, unitSystem: unit)
                 Section {
-                    Button("Save") { onSave(kg); dismiss() }.buttonStyle(.borderedProminent)
+                    WeightField(label: "Weight", kg: $kg, unitSystem: unit)
                 }
             }
-            .navigationTitle("Log weight")
+            .navigationTitle("Log Weight")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { onSave(kg); dismiss() }
+                        .fontWeight(.semibold)
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", role: .cancel) { dismiss() }
+                }
+            }
         }
     }
 }

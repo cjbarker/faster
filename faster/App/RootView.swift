@@ -29,15 +29,16 @@ struct MainTabs: View {
     var body: some View {
         TabView {
             TodayView()
-                .tabItem { Label("Today", systemImage: "sun.max") }
+                .tabItem { Label("Today", systemImage: "timer") }
             WeightLogView()
                 .tabItem { Label("Weight", systemImage: "scalemass") }
             WaterLogView()
-                .tabItem { Label("Water", systemImage: "drop") }
+                .tabItem { Label("Water", systemImage: "drop.fill") }
             WeeklySummaryView()
-                .tabItem { Label("Summary", systemImage: "chart.bar") }
+                .tabItem { Label("Summary", systemImage: "chart.bar.fill") }
             SettingsView()
-                .tabItem { Label("Settings", systemImage: "gear") }
+                .tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }
+        .tint(AppColor.accent)
     }
 }

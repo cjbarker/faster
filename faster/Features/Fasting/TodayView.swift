@@ -20,24 +20,19 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: Spacing.lg) {
                     if let session = activeSession {
                         FastingTimerView(session: session)
-                            .padding(.top, 16)
-                        HStack {
-                            Button("Adjust Start") { showAdjustSheet = true }
-                            Spacer()
-                            Button(role: .destructive) { showEndConfirm = true } label: {
-                                Text("End Fast")
-                            }
-                        }
-                        .padding(.horizontal)
+                            .padding(.top, Spacing.sm)
+
+                        actionBar
 
                         if let guidance {
                             GuidanceSection(guidance: guidance, session: session)
                         }
                     } else {
-                        NotFastingCard(plan: plan) { start(); }
+                        NotFastingCard(plan: plan) { start() }
+                            .padding(.top, Spacing.md)
                     }
 
                     if let guidance {
@@ -52,13 +47,13 @@ struct TodayView: View {
 
                     FooterDisclaimer()
                 }
-                .padding(.bottom, 32)
+                .padding(.bottom, Spacing.xl)
             }
             .navigationTitle("Today")
             .task { loadGuidance() }
             .confirmationDialog("End fast now?", isPresented: $showEndConfirm) {
                 Button("End early", role: .destructive) { endFast(reason: .endedEarly) }
-                Button("I reached my goal") { endFast(reason: .completed) }
+                Button("I reached my goal")             { endFast(reason: .completed) }
                 Button("Cancel", role: .cancel) {}
             }
             .sheet(isPresented: $showAdjustSheet) {
@@ -71,6 +66,37 @@ struct TodayView: View {
             }
         }
     }
+
+    // MARK: - Sub-views
+
+    @ViewBuilder private var actionBar: some View {
+        HStack(spacing: Spacing.sm) {
+            Button {
+                showAdjustSheet = true
+            } label: {
+                Label("Adjust Start", systemImage: "clock.arrow.circlepath")
+                    .font(AppFont.callout)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .tint(.secondary)
+            .controlSize(.large)
+
+            Button(role: .destructive) {
+                showEndConfirm = true
+            } label: {
+                Label("End Fast", systemImage: "stop.circle.fill")
+                    .font(AppFont.callout)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(AppColor.destructive)
+            .controlSize(.large)
+        }
+        .padding(.horizontal)
+    }
+
+    // MARK: - Actions
 
     private func loadGuidance() {
         do { guidance = try deps.guidanceProvider.load() } catch {
@@ -94,32 +120,61 @@ struct TodayView: View {
     }
 }
 
+// MARK: - Not Fasting Card
+
 private struct NotFastingCard: View {
     var plan: FastingPlan?
     var onStart: () -> Void
+
     var body: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "fork.knife.circle.fill")
-                .font(.system(size: 60))
-                .foregroundStyle(AppColor.eatingRing)
-            Text("You're in your eating window").font(AppFont.headline)
-            Text("When you finish your last meal, start your fast below.")
-                .font(AppFont.caption).foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button("Start \(plan?.protocolKind.rawValue ?? "16:8") fast now") { onStart() }
-                .buttonStyle(.borderedProminent)
+        VStack(spacing: Spacing.lg) {
+            ZStack {
+                Circle()
+                    .fill(AppColor.eatingRing.opacity(0.12))
+                    .frame(width: 96, height: 96)
+                Image(systemName: "fork.knife.circle.fill")
+                    .font(.system(size: 48))
+                    .foregroundStyle(AppColor.eatingGradient)
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .padding(.top, Spacing.sm)
+
+            VStack(spacing: Spacing.xs) {
+                Text("Eating Window")
+                    .font(AppFont.title3)
+                Text("Finish your last meal, then start your \(plan?.protocolKind.rawValue ?? "16:8") fast.")
+                    .font(AppFont.callout)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button {
+                onStart()
+            } label: {
+                Label("Start \(plan?.protocolKind.rawValue ?? "16:8") Fast", systemImage: "play.fill")
+                    .font(AppFont.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.xs)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(AppColor.accent)
+            .controlSize(.large)
+            .padding(.bottom, Spacing.xs)
         }
-        .padding()
+        .padding(Spacing.lg)
         .frame(maxWidth: .infinity)
-        .background(AppColor.secondaryBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .background(AppColor.secondaryBackground,
+                    in: RoundedRectangle(cornerRadius: CR.lg, style: .continuous))
         .padding(.horizontal)
     }
 }
 
+// MARK: - Guidance Section
+
 private struct GuidanceSection: View {
     var guidance: GuidanceContent
     var session: FastSession
+
     var body: some View {
         let ctx = GuidanceContext(
             phase: FastingPhase.phase(forHoursElapsed: session.durationSeconds / 3600),
@@ -128,7 +183,8 @@ private struct GuidanceSection: View {
             minutesUntilBreakFast: Int((session.plannedEnd.timeIntervalSinceNow) / 60)
         )
         let resolver = GuidanceResolver(content: guidance)
-        return VStack(alignment: .leading, spacing: 12) {
+
+        return VStack(alignment: .leading, spacing: Spacing.sm) {
             if let current = resolver.current(for: ctx) {
                 GuidanceCardView(card: current, isCurrent: true)
             }
@@ -143,58 +199,91 @@ private struct GuidanceSection: View {
 private struct GuidanceCardView: View {
     var card: GuidanceCard
     var isCurrent: Bool
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(card.title).font(AppFont.headline)
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(card.title)
+                    .font(AppFont.headline)
                 Spacer()
                 if isCurrent {
-                    Label("Now", systemImage: "clock")
-                        .font(AppFont.caption)
-                        .foregroundStyle(AppColor.accent)
+                    Label("Now", systemImage: "clock.fill")
+                        .font(AppFont.caption2)
+                        .foregroundStyle(AppColor.fastingRing)
+                        .padding(.horizontal, Spacing.sm)
+                        .padding(.vertical, 3)
+                        .background(AppColor.fastingRing.opacity(0.12), in: Capsule())
                 } else if let h = card.hourMin {
-                    Text("at \(h)h")
-                        .font(AppFont.caption)
-                        .foregroundStyle(.secondary)
+                    Text("h\(h)+")
+                        .font(AppFont.caption2)
+                        .foregroundStyle(.tertiary)
                 }
             }
-            Text(card.body).font(AppFont.body).foregroundStyle(.secondary)
+            Text(card.body)
+                .font(AppFont.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding()
+        .padding(Spacing.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColor.secondaryBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .background(
+            isCurrent ? AppColor.fastingRing.opacity(0.07) : AppColor.secondaryBackground,
+            in: RoundedRectangle(cornerRadius: CR.md, style: .continuous)
+        )
+        .overlay {
+            if isCurrent {
+                RoundedRectangle(cornerRadius: CR.md, style: .continuous)
+                    .strokeBorder(AppColor.fastingRing.opacity(0.22), lineWidth: 1)
+            }
+        }
     }
 }
 
+// MARK: - Allowed Preview Row
+
 private struct AllowedPreviewRow: View {
     var items: [AllowedConsumable]
+
     var body: some View {
-        HStack {
-            Image(systemName: "list.bullet.rectangle").foregroundStyle(AppColor.accent)
-            VStack(alignment: .leading) {
-                Text("What's allowed while fasting").font(AppFont.headline)
-                Text("Water, black coffee, plain tea, and more — tap to see details.")
-                    .font(AppFont.caption).foregroundStyle(.secondary)
+        HStack(spacing: Spacing.md) {
+            Image(systemName: "checkmark.shield.fill")
+                .font(.system(size: 22))
+                .foregroundStyle(AppColor.accentGradient)
+                .symbolRenderingMode(.hierarchical)
+                .frame(width: 32)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("What's allowed while fasting")
+                    .font(AppFont.headline)
+                Text("Water, black coffee, plain tea and more — tap to see details.")
+                    .font(AppFont.caption)
+                    .foregroundStyle(.secondary)
             }
+
             Spacer()
-            Image(systemName: "chevron.right").foregroundStyle(.secondary)
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.tertiary)
         }
-        .padding()
-        .background(AppColor.secondaryBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .padding(Spacing.md)
+        .background(AppColor.secondaryBackground,
+                    in: RoundedRectangle(cornerRadius: CR.md, style: .continuous))
     }
 }
+
+// MARK: - Footer
 
 private struct FooterDisclaimer: View {
     var body: some View {
         Text("Not medical advice. Not a treatment for any condition.")
             .font(AppFont.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(.tertiary)
             .multilineTextAlignment(.center)
             .padding(.horizontal)
     }
 }
+
+// MARK: - Adjust Start Sheet
 
 private struct AdjustStartSheet: View {
     var session: FastSession
@@ -211,17 +300,29 @@ private struct AdjustStartSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                DatePicker(
-                    "Actual start",
-                    selection: $newStart,
-                    in: (Date().addingTimeInterval(-48 * 3600))...Date(),
-                    displayedComponents: [.date, .hourAndMinute]
-                )
                 Section {
-                    Button("Save") { save(); dismiss() }.buttonStyle(.borderedProminent)
+                    DatePicker(
+                        "Actual start",
+                        selection: $newStart,
+                        in: (Date().addingTimeInterval(-48 * 3600))...Date(),
+                        displayedComponents: [.date, .hourAndMinute]
+                    )
+                } footer: {
+                    Text("You can adjust up to 48 hours back.")
+                        .font(AppFont.caption)
                 }
             }
             .navigationTitle("Adjust start time")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { save(); dismiss() }
+                        .fontWeight(.semibold)
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", role: .cancel) { dismiss() }
+                }
+            }
         }
     }
 
@@ -230,6 +331,8 @@ private struct AdjustStartSheet: View {
         try? controller.adjustStart(session, to: newStart)
     }
 }
+
+// MARK: - Mood & Energy Sheet
 
 private struct MoodEnergySheet: View {
     var session: FastSession
@@ -240,23 +343,44 @@ private struct MoodEnergySheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Mood") {
-                    Picker("", selection: $mood) {
-                        ForEach(1...5, id: \.self) { Text(String($0)).tag($0) }
-                    }.pickerStyle(.segmented)
+            ScrollView {
+                VStack(spacing: Spacing.lg) {
+                    VStack(spacing: Spacing.xs) {
+                        Image(systemName: "face.smiling.fill")
+                            .font(.system(size: 40))
+                            .foregroundStyle(AppColor.accentGradient)
+                            .symbolRenderingMode(.hierarchical)
+                        Text("How do you feel?")
+                            .font(AppFont.title)
+                        Text("Rate your mood and energy after breaking your fast.")
+                            .font(AppFont.callout)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.top, Spacing.lg)
+
+                    VStack(spacing: Spacing.md) {
+                        RatingRow(label: "Mood", icon: "face.smiling", value: $mood, tint: AppColor.accent)
+                        RatingRow(label: "Energy", icon: "bolt.fill", value: $energy, tint: .orange)
+                    }
+                    .padding(.horizontal)
+
+                    VStack(spacing: Spacing.sm) {
+                        Button("Save") { save(); dismiss() }
+                            .buttonStyle(.borderedProminent)
+                            .tint(AppColor.accent)
+                            .controlSize(.large)
+                            .frame(maxWidth: .infinity)
+
+                        Button("Skip") { dismiss() }
+                            .font(AppFont.callout)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal)
                 }
-                Section("Energy") {
-                    Picker("", selection: $energy) {
-                        ForEach(1...5, id: \.self) { Text(String($0)).tag($0) }
-                    }.pickerStyle(.segmented)
-                }
-                Section {
-                    Button("Save") { save(); dismiss() }.buttonStyle(.borderedProminent)
-                    Button("Skip") { dismiss() }
-                }
+                .padding(.bottom, Spacing.xl)
             }
-            .navigationTitle("How do you feel?")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 
@@ -264,5 +388,39 @@ private struct MoodEnergySheet: View {
         session.moodAtBreakFast = mood
         session.energyAtBreakFast = energy
         try? context.save()
+    }
+}
+
+private struct RatingRow: View {
+    var label: String
+    var icon: String
+    @Binding var value: Int
+    var tint: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Label(label, systemImage: icon)
+                .font(AppFont.headline)
+                .symbolRenderingMode(.hierarchical)
+
+            HStack(spacing: Spacing.sm) {
+                ForEach(1...5, id: \.self) { i in
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { value = i }
+                    } label: {
+                        Circle()
+                            .fill(i <= value ? tint : tint.opacity(0.12))
+                            .frame(width: 44, height: 44)
+                            .overlay(
+                                Text(String(i))
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(i <= value ? .white : tint.opacity(0.5))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .cardStyle()
     }
 }

@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 enum SchemaV1: VersionedSchema {
-    static var versionIdentifier = Schema.Version(1, 0, 0)
+    static let versionIdentifier = Schema.Version(1, 0, 0)
 
     static var models: [any PersistentModel.Type] {
         [
@@ -14,24 +14,6 @@ enum SchemaV1: VersionedSchema {
             WaterEntry.self,
             NotificationLog.self
         ]
-    }
-}
-
-enum Sex: String, Codable, CaseIterable, Sendable {
-    case male, female, unspecified
-}
-
-enum ActivityLevel: String, Codable, CaseIterable, Sendable {
-    case sedentary, light, moderate, active, veryActive
-
-    var multiplier: Double {
-        switch self {
-        case .sedentary:   return 1.2
-        case .light:       return 1.375
-        case .moderate:    return 1.55
-        case .active:      return 1.725
-        case .veryActive:  return 1.9
-        }
     }
 }
 

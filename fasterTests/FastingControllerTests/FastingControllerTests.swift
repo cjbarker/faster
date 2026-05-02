@@ -8,14 +8,16 @@ final class FastingControllerTests: XCTestCase {
     private var context: ModelContext!
     private var controller: FastingController!
 
-    override func setUpWithError() throws {
-        container = ModelContainerFactory.make(inMemory: true)
-        context = container.mainContext
-        controller = FastingController(
-            context: context,
-            scheduler: NotificationScheduler(),
-            healthStore: HealthStore()
-        )
+    override func setUp() async throws {
+        await MainActor.run {
+            container = ModelContainerFactory.make(inMemory: true)
+            context = container.mainContext
+            controller = FastingController(
+                context: context,
+                scheduler: NotificationScheduler(),
+                healthStore: HealthStore()
+            )
+        }
     }
 
     func testStartAndEndFast() throws {
@@ -56,11 +58,5 @@ final class FastingControllerTests: XCTestCase {
         let session = try controller.startFast(plan: plan)
         let tooOld = Date().addingTimeInterval(-72 * 3600)
         XCTAssertThrowsError(try controller.adjustStart(session, to: tooOld))
-    }
-}
-
-extension FastingError: Equatable {
-    public static func == (lhs: FastingError, rhs: FastingError) -> Bool {
-        lhs.localizedDescription == rhs.localizedDescription
     }
 }

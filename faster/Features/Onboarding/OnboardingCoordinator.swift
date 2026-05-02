@@ -131,11 +131,13 @@ struct OnboardingCoordinator: View {
     }
 }
 
+@MainActor
 func advance(_ state: OnboardingState) {
     let next = min(state.step.rawValue + 1, OnboardingStep.allCases.count - 1)
     state.step = OnboardingStep(rawValue: next) ?? .review
 }
 
+@MainActor
 func retreat(_ state: OnboardingState) {
     let prev = max(state.step.rawValue - 1, 0)
     state.step = OnboardingStep(rawValue: prev) ?? .disclaimer

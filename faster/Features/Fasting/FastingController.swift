@@ -1,5 +1,5 @@
 import Foundation
-import SwiftData
+@preconcurrency import SwiftData
 
 enum FastingError: Error, LocalizedError {
     case alreadyActive

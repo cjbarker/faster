@@ -1,5 +1,23 @@
 import Foundation
 
+public enum Sex: String, Codable, CaseIterable, Sendable {
+    case male, female, unspecified
+}
+
+public enum ActivityLevel: String, Codable, CaseIterable, Sendable {
+    case sedentary, light, moderate, active, veryActive
+
+    public var multiplier: Double {
+        switch self {
+        case .sedentary:   return 1.2
+        case .light:       return 1.375
+        case .moderate:    return 1.55
+        case .active:      return 1.725
+        case .veryActive:  return 1.9
+        }
+    }
+}
+
 public enum EnergyMath {
     public static let kcalPerKgBodyFat: Double = 7700
     public static let femaleKcalFloor: Double = 1200
