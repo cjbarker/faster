@@ -13,8 +13,11 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <imageView opaque="NO" clipsSubviews="YES" contentMode="scaleAspectFit" image="LaunchIcon" translatesAutoresizingMaskIntoConstraints="NO" id="Lnc-Ic-img">
+                                <rect key="frame" x="136.5" y="306" width="120" height="120"/>
+                            </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="faster" textAlignment="center" lineBreakMode="middleTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GJd-Yh-RWb">
-                                <rect key="frame" x="97" y="402" width="199" height="48"/>
+                                <rect key="frame" x="97" y="446" width="199" height="48"/>
                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="42"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="highlightedColor"/>
@@ -23,8 +26,14 @@
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
                         <color key="backgroundColor" red="0.18" green="0.78" blue="0.68" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <!-- Icon: centred horizontally, centred vertically minus 70 -->
+                            <constraint firstItem="Lnc-Ic-img" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="img-cx"/>
+                            <constraint firstItem="Lnc-Ic-img" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" constant="-70" id="img-cy"/>
+                            <constraint firstItem="Lnc-Ic-img" firstAttribute="width" constant="120" id="img-w"/>
+                            <constraint firstItem="Lnc-Ic-img" firstAttribute="height" constant="120" id="img-h"/>
+                            <!-- Label: centred horizontally, 20 pt below icon -->
                             <constraint firstItem="GJd-Yh-RWb" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="Q3B-4t-guV"/>
-                            <constraint firstItem="GJd-Yh-RWb" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="moa-c2-u7t"/>
+                            <constraint firstItem="GJd-Yh-RWb" firstAttribute="top" secondItem="Lnc-Ic-img" secondAttribute="bottom" constant="20" id="lbl-top"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -33,4 +42,7 @@
             <point key="canvasLocation" x="53" y="375"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="LaunchIcon" width="120" height="120"/>
+    </resources>
 </document>
