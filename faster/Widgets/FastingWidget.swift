@@ -179,7 +179,7 @@ struct FastingWidgetView: View {
                         .font(.caption.bold())
                         .foregroundStyle(accentColor)
                     Spacer()
-                    Image(systemName: isFasting ? "flame.fill" : "moon.zzz")
+                    Image(systemName: isFasting ? "fork.knife" : "moon.zzz")
                         .font(.caption)
                         .foregroundStyle(isFasting ? accentColor : .secondary)
                 }
@@ -234,7 +234,7 @@ struct FastingLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Label(context.state.phaseTitle, systemImage: "flame.fill")
+                    Label(context.state.phaseTitle, systemImage: "fork.knife")
                         .font(.caption.bold())
                         .foregroundStyle(Color(red: 0.18, green: 0.78, blue: 0.68))
                 }
@@ -249,14 +249,14 @@ struct FastingLiveActivityWidget: Widget {
                         .foregroundStyle(.secondary)
                 }
             } compactLeading: {
-                Image(systemName: "flame.fill")
+                Image(systemName: "fork.knife")
                     .foregroundStyle(Color(red: 0.18, green: 0.78, blue: 0.68))
             } compactTrailing: {
                 Text(context.state.end, style: .timer)
                     .monospacedDigit()
                     .font(.caption2.bold())
             } minimal: {
-                Image(systemName: "flame.fill")
+                Image(systemName: "fork.knife")
                     .foregroundStyle(Color(red: 0.18, green: 0.78, blue: 0.68))
             }
         }
