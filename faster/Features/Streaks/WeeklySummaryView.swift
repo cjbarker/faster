@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Charts
 
 struct WeeklySummaryView: View {
     @Query(sort: \FastSession.actualStart, order: .reverse) private var sessions: [FastSession]
@@ -26,6 +27,8 @@ struct WeeklySummaryView: View {
                     StreakHeroCard(streak: streak)
 
                     StatsGrid(summary: summary)
+
+                    MoodEnergyTrendChart(sessions: sessions)
 
                     RecentFastsList(sessions: Array(sessions.prefix(10)))
                 }
@@ -207,12 +210,21 @@ private struct RecentFastRow: View {
                     .foregroundStyle(completionColor)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(session.actualStart, style: .date)
                     .font(AppFont.callout)
                 Text("\(session.protocolKind.rawValue) · \(Int(session.durationSeconds / 3600))h fasted")
                     .font(AppFont.caption)
                     .foregroundStyle(.secondary)
+                if let reason = session.endReason {
+                    Text(reason.displayTitle)
+                        .font(AppFont.caption2)
+                        .foregroundStyle(reason.badgeColor)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(reason.badgeColor.opacity(0.10),
+                                    in: Capsule())
+                }
             }
 
             Spacer()
@@ -225,5 +237,81 @@ private struct RecentFastRow: View {
         .padding(.horizontal, Spacing.md)
         .background(AppColor.secondaryBackground,
                     in: RoundedRectangle(cornerRadius: CR.md, style: .continuous))
+    }
+}
+
+// MARK: - Mood & Energy Trend Chart
+
+private struct MoodEnergyTrendChart: View {
+    var sessions: [FastSession]
+
+    private struct TrendPoint: Identifiable {
+        let id = UUID()
+        let date: Date
+        let value: Double
+        let series: String
+    }
+
+    private var thirtyDaysAgo: Date {
+        Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+    }
+
+    private var points: [TrendPoint] {
+        let recent = sessions.filter { $0.actualStart >= thirtyDaysAgo && $0.actualEnd != nil }
+        var result: [TrendPoint] = []
+        for s in recent {
+            let date = s.actualEnd ?? s.actualStart
+            if let mood = s.moodAtBreakFast {
+                result.append(TrendPoint(date: date, value: Double(mood),   series: "Mood"))
+            }
+            if let energy = s.energyAtBreakFast {
+                result.append(TrendPoint(date: date, value: Double(energy), series: "Energy"))
+            }
+        }
+        return result.sorted { $0.date < $1.date }
+    }
+
+    var body: some View {
+        if !points.isEmpty {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                Label("Mood & Energy — 30 days", systemImage: "waveform.path.ecg")
+                    .font(AppFont.headline)
+                    .symbolRenderingMode(.hierarchical)
+
+                Chart(points) { p in
+                    LineMark(
+                        x: .value("Date", p.date),
+                        y: .value("Rating", p.value)
+                    )
+                    .foregroundStyle(by: .value("Series", p.series))
+                    .interpolationMethod(.catmullRom)
+
+                    PointMark(
+                        x: .value("Date", p.date),
+                        y: .value("Rating", p.value)
+                    )
+                    .foregroundStyle(by: .value("Series", p.series))
+                    .symbolSize(30)
+                }
+                .chartForegroundStyleScale(["Mood": Color.yellow, "Energy": Color.orange])
+                .chartYScale(domain: 1...5)
+                .chartYAxis {
+                    AxisMarks(values: [1, 2, 3, 4, 5]) {
+                        AxisGridLine().foregroundStyle(Color.secondary.opacity(0.15))
+                        AxisValueLabel()
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks(values: .automatic(desiredCount: 4)) {
+                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                            .foregroundStyle(Color.secondary)
+                        AxisGridLine().foregroundStyle(Color.secondary.opacity(0.15))
+                    }
+                }
+                .chartLegend(position: .top, alignment: .trailing)
+                .frame(height: 160)
+            }
+            .cardStyle()
+        }
     }
 }

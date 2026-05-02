@@ -6,7 +6,9 @@ struct TodayView: View {
     @Environment(AppDependencies.self) private var deps
     @Query private var profiles: [UserProfile]
     @Query private var plans: [FastingPlan]
+    @Query private var goals: [Goal]
     @Query(sort: \FastSession.actualStart, order: .reverse) private var sessions: [FastSession]
+    @Query(sort: \WeightEntry.date, order: .reverse) private var weights: [WeightEntry]
 
     @State private var guidance: GuidanceContent?
     @State private var showEndConfirm = false
@@ -18,10 +20,28 @@ struct TodayView: View {
     private var plan: FastingPlan? { plans.first }
     private var profile: UserProfile? { profiles.first }
 
+    private var energyData: EnergyData? {
+        guard let p = profile, let w = weights.first, let g = goals.first else { return nil }
+        let bmr    = EnergyMath.bmr(sex: p.sex, weightKg: w.weightKg, heightCm: p.heightCm, ageYears: p.ageYears)
+        let tdee   = EnergyMath.tdee(bmr: bmr, activity: p.activityLevel)
+        let target = EnergyMath.targetDailyCalories(tdee: tdee, sex: p.sex, currentWeightKg: w.weightKg)
+        let days   = EnergyMath.projectedDaysToGoal(currentWeightKg: w.weightKg,
+                                                     targetWeightKg: g.targetWeightKg,
+                                                     dailyDeficit: target.deficit)
+        return EnergyData(targetCalories: target.calories, deficit: target.deficit, projectedDays: days)
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Spacing.lg) {
+                    // Medical advisory — shown whenever onboarding safety flags are set
+                    if let flags = profile?.medicalFlags, !flags.isEmpty {
+                        MedicalFlagsBanner(flags: flags)
+                            .padding(.horizontal)
+                            .padding(.top, Spacing.xs)
+                    }
+
                     if let session = activeSession {
                         FastingTimerView(session: session)
                             .padding(.top, Spacing.sm)
@@ -34,6 +54,12 @@ struct TodayView: View {
                     } else {
                         NotFastingCard(plan: plan) { start() }
                             .padding(.top, Spacing.md)
+                    }
+
+                    // Energy budget — shows daily calorie target and projected goal
+                    if let data = energyData {
+                        EnergyBudgetCard(data: data)
+                            .padding(.horizontal)
                     }
 
                     if let guidance {
@@ -435,5 +461,121 @@ private struct RatingRow: View {
             }
         }
         .cardStyle()
+    }
+}
+
+// MARK: - Medical Flags Banner
+
+private struct MedicalFlagsBanner: View {
+    var flags: [String]
+
+    private var advisoryLines: [String] {
+        var lines: [String] = []
+        if flags.contains("insulin_or_sulfonylureas") {
+            lines.append("You take insulin or sulfonylureas — monitor blood sugar closely during fasts.")
+        }
+        if flags.contains("bp_meds") {
+            lines.append("You take blood pressure medication — watch for symptoms and consult your doctor before extending fasts.")
+        }
+        if flags.contains("meds_with_food") {
+            lines.append("You take medications that require food — plan doses within your eating window.")
+        }
+        return lines
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Spacing.sm) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 16))
+                .foregroundStyle(.orange)
+                .symbolRenderingMode(.hierarchical)
+                .padding(.top, 1)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Medical advisory")
+                    .font(AppFont.callout)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.orange)
+                ForEach(advisoryLines, id: \.self) { line in
+                    Text(line)
+                        .font(AppFont.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .padding(Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.orange.opacity(0.08),
+                    in: RoundedRectangle(cornerRadius: CR.md, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: CR.md, style: .continuous)
+                .strokeBorder(.orange.opacity(0.22), lineWidth: 1)
+        }
+    }
+}
+
+// MARK: - Energy Budget Card
+
+private struct EnergyData {
+    let targetCalories: Double
+    let deficit: Double
+    let projectedDays: Int?
+}
+
+private struct EnergyBudgetCard: View {
+    var data: EnergyData
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Label("Energy Budget", systemImage: "bolt.heart.fill")
+                .font(AppFont.headline)
+                .foregroundStyle(AppColor.accentGradient)
+                .symbolRenderingMode(.hierarchical)
+
+            HStack(spacing: 0) {
+                statColumn(
+                    value: "\(Int(data.targetCalories.rounded()))",
+                    unit: "kcal",
+                    label: "Daily target"
+                )
+                Divider()
+                    .frame(height: 36)
+                    .padding(.horizontal, Spacing.md)
+                statColumn(
+                    value: "\(Int(data.deficit.rounded()))",
+                    unit: "kcal",
+                    label: "Daily deficit"
+                )
+                if let days = data.projectedDays {
+                    Divider()
+                        .frame(height: 36)
+                        .padding(.horizontal, Spacing.md)
+                    statColumn(
+                        value: "~\(days)",
+                        unit: "days",
+                        label: "To goal"
+                    )
+                }
+            }
+        }
+        .cardStyle()
+    }
+
+    private func statColumn(value: String, unit: String, label: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(value)
+                    .font(AppFont.title3)
+                    .foregroundStyle(.primary)
+                Text(unit)
+                    .font(AppFont.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Text(label)
+                .font(AppFont.caption)
+                .foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

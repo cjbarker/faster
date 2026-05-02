@@ -73,6 +73,28 @@ extension View {
     }
 }
 
+// MARK: - FastEndReason design helpers
+
+extension FastEndReason {
+    var displayTitle: String {
+        switch self {
+        case .completed:  return "Completed"
+        case .endedEarly: return "Ended early"
+        case .missed:     return "Missed"
+        case .adjusted:   return "Adjusted"
+        }
+    }
+
+    var badgeColor: Color {
+        switch self {
+        case .completed:  return AppColor.accent
+        case .endedEarly: return .orange
+        case .missed:     return .secondary
+        case .adjusted:   return AppColor.fastingRing
+        }
+    }
+}
+
 // MARK: - FastingPhase design helpers
 
 extension FastingPhase {
