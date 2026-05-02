@@ -177,30 +177,30 @@ struct FastingWidgetView: View {
                 HStack {
                     Text(isFasting ? entry.protocolLabel : "faster")
                         .font(.caption.bold())
-                        .foregroundStyle(accentColor)
+                        .foregroundStyle(.white)
                     Spacer()
                     Image(systemName: isFasting ? "fork.knife" : "moon.zzz")
                         .font(.caption)
-                        .foregroundStyle(isFasting ? accentColor : .secondary)
+                        .foregroundStyle(.white.opacity(0.8))
                 }
                 Spacer()
                 if let end = entry.end {
                     Text(end, style: .timer)
                         .font(.title2.monospacedDigit().bold())
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(.white)
                 } else {
                     Text("Not fasting")
                         .font(.title3.bold())
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white)
                 }
                 Text(entry.phaseTitle)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.white.opacity(0.75))
                 ProgressView(value: entry.progress)
-                    .tint(accentColor)
+                    .tint(.white)
             }
             .padding()
-            .containerBackground(for: .widget) { Color(.systemBackground) }
+            .containerBackground(for: .widget) { accentColor }
         }
     }
 }
@@ -216,21 +216,23 @@ struct FastingLiveActivityWidget: Widget {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(context.attributes.protocolLabel)
                         .font(.caption.bold())
-                        .foregroundStyle(Color(red: 0.18, green: 0.78, blue: 0.68))
+                        .foregroundStyle(.white)
                     Text(context.state.phaseTitle)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.75))
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(context.state.end, style: .timer)
                         .font(.title3.monospacedDigit().bold())
+                        .foregroundStyle(.white)
                     Text("remaining")
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.75))
                 }
             }
             .padding()
+            .background(Color(red: 0.18, green: 0.78, blue: 0.68))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
